@@ -46,14 +46,14 @@ FROM vacancy;
 WITH count_of_responses AS (
     SELECT DISTINCT
         company_name,
-        max(count(*)) OVER (PARTITION BY company_name) as max_count_of_responses
+        max(count(response.vacancy_id <> 0)) OVER (PARTITION BY company_name) as max_count_of_responses
     FROM company
-    INNER JOIN vacancy ON vacancy.company_id = company.company_id
-    INNER JOIN response ON response.vacancy_id = vacancy.vacancy_id
+    LEFT JOIN vacancy ON vacancy.company_id = company.company_id
+    LEFT JOIN response ON response.vacancy_id = vacancy.vacancy_id
     GROUP BY company_name, response.vacancy_id
 )
 SELECT
-    company_name 
+    company_name
 FROM count_of_responses
 ORDER BY count_of_responses.max_count_of_responses DESC, company_name
 LIMIT 5;
@@ -80,6 +80,6 @@ SELECT DISTINCT
     area.area_name,
     max(response.time_stamp - vacancy.time_stamp) OVER (PARTITION BY vacancy.area_id) AS max_time_to_response,
     min(response.time_stamp - vacancy.time_stamp) OVER (PARTITION BY vacancy.area_id) AS min_time_to_response
-FROM vacancy
-LEFT JOIN response ON response.vacancy_id = vacancy.vacancy_id
-LEFT JOIN area ON area.area_id = vacancy.area_id;
+FROM area
+LEFT JOIN vacancy ON area.area_id = vacancy.area_id
+LEFT JOIN response ON response.vacancy_id = vacancy.vacancy_id;
